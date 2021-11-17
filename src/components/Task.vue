@@ -16,7 +16,10 @@
       <button @click="() => removeTask(task.id)">
         <font-awesome-icon icon="trash-alt" size="lg" class="text-pink-400" />
       </button>
-      <button v-show="!task.completed" @click="() => markTaskComplete(task.id)">
+      <button
+        v-show="!task.completed"
+        @click="() => markTaskComplete(task.id, $refs.alertModal.openModal)"
+      >
         <font-awesome-icon
           icon="check-circle"
           size="lg"
@@ -126,6 +129,20 @@
       </template>
     </EditModal>
   </div>
+
+  <AlertModal ref="alertModal">
+    <template v-slot:header>
+      <h1 class="text-green-600 uppercase font-extrabold text-sm m-auto">
+        congragulations
+      </h1>
+    </template>
+
+    <template v-slot:body>
+      <p class="text-gray-500 uppercase font-bold text-sm text-center">
+        way to crush a task. be proud of yourself
+      </p>
+    </template>
+  </AlertModal>
 </template>
 
 <script>
@@ -136,6 +153,7 @@ import axios from "axios";
 import { server } from "../helper";
 import Modal from "./Modal.vue";
 import EditModal from "./EditModal.vue";
+import AlertModal from "./AlertModal.vue";
 
 export default {
   name: "Task",
@@ -146,7 +164,7 @@ export default {
       sharedState: store.state,
     };
   },
-  components: { Modal, EditModal },
+  components: { Modal, EditModal, AlertModal },
   created() {
     dayjs.extend(relativeTime);
   },
@@ -192,7 +210,7 @@ export default {
         .catch((err) => console.log(err.response));
     },
 
-    markTaskComplete: (id) => {
+    markTaskComplete: (id, cb) => {
       axios
         .patch(
           `${server.baseURL}/tasks/complete/${id}`,
@@ -206,6 +224,7 @@ export default {
         )
         .then((res) => {
           store.markTaskComplete(id);
+          cb();
         })
         .catch((err) => console.log(err.response.data.message));
     },
