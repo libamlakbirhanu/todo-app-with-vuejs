@@ -9,7 +9,8 @@
       bg-pink-600
       w-full
       h-14
-      px-20
+      sm:px-20
+      px-5
     "
   >
     <h1 class="text-white font-bold">Logo</h1>

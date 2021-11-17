@@ -20,4 +20,6 @@ export default {
 	date: 'created at',
 	editTask: 'edit task',
 	cancel: 'cancel',
+	emptyTasks: 'try adding a new task',
+	language: 'language',
 };

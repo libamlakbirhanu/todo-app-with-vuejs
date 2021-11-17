@@ -6,11 +6,17 @@
         : 'bg-pink-100 rounded px-5 py-3 mb-5 shadow-md task-width flex gap-3 border-r-8 border-green-500',
     ]"
   >
-    <div class="flex items-center flex-col gap-3 justify-between">
+    <div
+      :class="[
+        task.completed
+          ? 'flex items-center flex-col gap-3 justify-center'
+          : 'flex items-center flex-col gap-3 justify-between',
+      ]"
+    >
       <button @click="() => removeTask(task.id)">
         <font-awesome-icon icon="trash-alt" size="lg" class="text-pink-400" />
       </button>
-      <button @click="() => markTaskComplete(task.id)">
+      <button v-show="!task.completed" @click="() => markTaskComplete(task.id)">
         <font-awesome-icon
           icon="check-circle"
           size="lg"

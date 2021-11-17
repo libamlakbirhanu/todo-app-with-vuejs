@@ -20,4 +20,6 @@ export default {
 	date: 'የተመሰረተበት ቀን',
 	editTask: 'ተግባርን ማስተካከል',
 	cancel: 'መሰረዝ',
+	emptyTasks: 'አዲስ ተግባር ለመጨመር ይሞክሩ',
+	language: 'ቋንቋ',
 };

@@ -22,10 +22,16 @@ export default {
 		});
 	},
 
+	resetTasks() {
+		this.state.searchResults = null;
+		this.state.filterResults = null;
+	},
+
 	setCurrentUser(user) {
 		this.state.currentUser = user;
+		this.state.isAuthenticated = true;
 
-		if (this.state.currentUser) {
+		if (this.state.currentUser && this.state.currentUser.tasks) {
 			let tempTasks = [...this.state.currentUser.tasks];
 			const tempComplete = [];
 			const tempIncomplete = [];
@@ -43,8 +49,6 @@ export default {
 
 			this.state.currentUser.tasks = [...tempIncomplete, ...tempComplete];
 		}
-
-		this.state.isAuthenticated = true;
 	},
 
 	removeCurrentUser() {
@@ -53,17 +57,19 @@ export default {
 	},
 
 	showSearchResults(target) {
-		this.state.searchResults = this.state.currentUser.tasks.filter((task) => {
-			const words = target.toLowerCase().split(' ');
-			let flag = false;
-			for (let i = 0; i < words.length; i++) {
-				if (task.body.toLowerCase().split(' ').includes(words[i])) {
-					flag = true;
-					break;
+		if (this.state.currentUser.tasks) {
+			this.state.searchResults = this.state.currentUser.tasks.filter((task) => {
+				const words = target.toLowerCase().split(' ');
+				let flag = false;
+				for (let i = 0; i < words.length; i++) {
+					if (task.body.toLowerCase().split(' ').includes(words[i])) {
+						flag = true;
+						break;
+					}
 				}
-			}
-			return flag;
-		});
+				return flag;
+			});
+		}
 	},
 
 	clearSearchResults() {
@@ -71,20 +77,22 @@ export default {
 	},
 
 	showFilterResults(target) {
-		switch (target) {
-			case 'incomplete':
-				this.state.filterResults = this.state.currentUser.tasks.filter(
-					(task) => !task.completed
-				);
-				break;
-			case 'complete':
-				this.state.filterResults = this.state.currentUser.tasks.filter(
-					(task) => task.completed
-				);
-				break;
-			case 'all':
-				this.state.filterResults = null;
-				break;
+		if (this.state.currentUser.tasks) {
+			switch (target) {
+				case 'incomplete':
+					this.state.filterResults = this.state.currentUser.tasks.filter(
+						(task) => !task.completed
+					);
+					break;
+				case 'complete':
+					this.state.filterResults = this.state.currentUser.tasks.filter(
+						(task) => task.completed
+					);
+					break;
+				case 'all':
+					this.state.filterResults = null;
+					break;
+			}
 		}
 
 		this.state.searchResults = null;
@@ -117,7 +125,22 @@ export default {
 			...tempTasks[index],
 			completed: true,
 		};
-		this.state.currentUser.tasks = tempTasks;
+
+		const tempComplete = [];
+		const tempIncomplete = [];
+
+		tempTasks.forEach((tempTask, index) => {
+			if (tempTask.completed === true) {
+				tempComplete.push(tempTask);
+			} else {
+				tempIncomplete.push(tempTask);
+			}
+		});
+
+		this.sortTasks(tempIncomplete);
+		this.sortTasks(tempComplete);
+
+		this.state.currentUser.tasks = [...tempIncomplete, ...tempComplete];
 	},
 
 	selectLanguage(lang) {
