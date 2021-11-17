@@ -1,10 +1,10 @@
 <template>
-  <div class="container w-96 mx-auto my-10 px-6 py-6 shadow">
+  <div class="container max-w-md mx-auto my-10 px-6 py-6 shadow">
     <h1 class="text-pink-600 font-bold font-sans text-4xl text-center">
       {{ sharedState.language.rTitle }}
     </h1>
     <div class="h-0.5 bg-gray-200 w-36 mx-auto mt-2.5"></div>
-    <form @submit="handleSubmit">
+    <form @submit="(e) => handleSubmit(e, $refs.alertModal.openModal)">
       <div class="flex flex-col my-5">
         <label class="my-2" for="uname">{{ sharedState.language.email }}</label>
         <input
@@ -111,12 +111,27 @@
       >
     </form>
   </div>
+
+  <AlertModal ref="alertModal">
+    <template v-slot:header>
+      <h1 class="text-pink-600 uppercase font-extrabold text-sm m-auto">
+        error
+      </h1>
+    </template>
+
+    <template v-slot:body>
+      <p class="text-gray-500 uppercase font-bold text-sm text-center">
+        {{ privateState.error }}
+      </p>
+    </template>
+  </AlertModal>
 </template>
 
 <script>
 import axios from "axios";
 import { server } from "../helper";
 import store from "../store";
+import AlertModal from "./../components/AlertModal.vue";
 
 export default {
   name: "Register",
@@ -128,11 +143,13 @@ export default {
         email: "",
         password: "",
         confirmPassword: "",
+        error: "",
       },
     };
   },
+  components: { AlertModal },
   methods: {
-    handleSubmit(e) {
+    handleSubmit(e, cb) {
       e.preventDefault();
       const formData = {
         username: this.privateState.username.trim(),
@@ -140,7 +157,26 @@ export default {
         confirmPassword: this.privateState.confirmPassword.trim(),
         email: this.privateState.email.trim(),
       };
-      console.log(formData);
+
+      try {
+        axios
+          .post(`${server.baseURL}/auth/register`, formData, {
+            headers: {
+              "Content-type": "application/json",
+            },
+            withCredentials: true,
+          })
+          .then((res) => {
+            store.setCurrentUser(res.data.user);
+            this.$router.push({ name: "Home" });
+          })
+          .catch((err) => {
+            this.privateState.error = err.response.data.message;
+            cb();
+          });
+      } catch (err) {
+        console.error(err);
+      }
     },
   },
 };
