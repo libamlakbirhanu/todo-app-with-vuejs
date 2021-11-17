@@ -1,0 +1,146 @@
+<template>
+  <div class="mt-20 mx-auto w-4/5 flex flex-col">
+    <div class="flex justify-between mb-5">
+      <form @submit="displaySearchResults">
+        <input
+          class="
+            bg-transparent
+            border-b-2
+            outline-none
+            focus:border-pink-500
+            text-pink-500
+            p-1
+          "
+          type="text"
+          :placeholder="sharedState.language.search"
+          v-model="privateState.search"
+          @keyup="clearSearchResults"
+        />
+      </form>
+      <div class="flex gap-3">
+        <select
+          name="filterOptions"
+          id="filters"
+          @change="displayFilterResults"
+        >
+          <option value="all">all</option>
+          <option value="complete">complete</option>
+          <option value="incomplete">incomplete</option>
+        </select>
+        <select name="languages" id="languages" @change="changeLanguage">
+          <option value="amh">amharic</option>
+          <option value="en">english</option>
+        </select>
+      </div>
+    </div>
+    <form @submit="addTask" class="mb-5 flex flex-nowrap justify-around">
+      <input
+        class="
+          bg-transparent
+          border-b-2
+          outline-none
+          w-4/5
+          focus:border-pink-500
+          text-pink-500
+          p-1
+        "
+        type="text"
+        :placeholder="sharedState.language.placeholder"
+        v-model="privateState.task"
+        required
+      />
+      <button
+        type="submit"
+        class="
+          bg-pink-500
+          hover:bg-pink-700
+          px-5
+          font-bold
+          rounded
+          text-white
+          shadow-md
+        "
+      >
+        {{ sharedState.language.add }}
+      </button>
+    </form>
+    <div v-if="sharedState.isAuthenticated">
+      <div
+        v-for="task in sharedState.searchResults
+          ? sharedState.searchResults
+          : sharedState.filterResults
+          ? sharedState.filterResults
+          : sharedState.currentUser.tasks"
+        :key="task.id"
+      >
+        <Task :task="task" />
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import store from "../store";
+import Task from "../components/Task.vue";
+import axios from "axios";
+import { server } from "../helper";
+
+export default {
+  name: "Home",
+  components: { Task },
+  data() {
+    return { privateState: { search: "", task: "" }, sharedState: store.state };
+  },
+
+  mounted() {
+    !this.sharedState.loadingUser &&
+      !this.sharedState.isAuthenticated &&
+      this.$router.push({ name: "Login" });
+  },
+  methods: {
+    displaySearchResults(e) {
+      e.preventDefault();
+      store.showSearchResults(this.privateState.search);
+    },
+    displayFilterResults(e) {
+      store.showFilterResults(e.target.value);
+    },
+    changeLanguage(e) {
+      store.selectLanguage(e.target.value);
+    },
+    clearSearchResults(e) {
+      this.privateState.search === "" && store.clearSearchResults();
+    },
+    async addTask(e) {
+      e.preventDefault();
+
+      try {
+        axios
+          .post(
+            `${server.baseURL}/tasks`,
+            { body: this.privateState.task.trim() },
+            {
+              headers: {
+                "Content-type": "application/json",
+              },
+              withCredentials: true,
+            }
+          )
+          .then((res) => {
+            store.addTask({ ...res.data });
+            this.privateState.task = "";
+          })
+          .catch((err) => console.error(err.response.data.message));
+      } catch (err) {
+        console.error(err);
+      }
+    },
+  },
+};
+</script>
+
+<style>
+.task-width {
+  max-width: 400px;
+}
+</style>
