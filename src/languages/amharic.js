@@ -22,4 +22,10 @@ export default {
 	cancel: 'መሰረዝ',
 	emptyTasks: 'አዲስ ተግባር ለመጨመር ይሞክሩ',
 	language: 'ቋንቋ',
+	error: 'ስህተት',
+	alert: 'ማንቂያ',
+	congragulation: 'እንኳን ደስ ያለዎት',
+	delete: 'አዎ',
+	deletePrompt: 'እርግጠኛ ነዎት ይህን ተግባር ማስወገድ ይፈልጋሉ?',
+	congrats: 'አንድ ተግባር ጨርሰዋል:: በራስዎት ሊኮሩ ይገባል',
 };

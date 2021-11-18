@@ -22,4 +22,10 @@ export default {
 	cancel: 'cancel',
 	emptyTasks: 'try adding a new task',
 	language: 'language',
+	error: 'error',
+	alert: 'alert',
+	congragulation: 'congragulation',
+	delete: 'yes',
+	deletePrompt: 'Are you sure you want to remove this task?',
+	congrats: 'way to crush a task. be proud of yourself',
 };

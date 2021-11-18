@@ -44,7 +44,10 @@
         </select>
       </div>
     </div>
-    <form @submit="addTask" class="mb-5 flex flex-nowrap justify-around">
+    <form
+      @submit="(e) => addTask(e, $refs.alertModal.openModal)"
+      class="mb-5 flex flex-nowrap justify-around"
+    >
       <input
         class="
           bg-transparent
@@ -116,6 +119,20 @@
       </p>
     </div>
   </div>
+
+  <AlertModal ref="alertModal">
+    <template v-slot:header>
+      <h1 class="text-pink-600 uppercase font-extrabold text-sm m-auto">
+        {{ sharedState.language.error }}
+      </h1>
+    </template>
+
+    <template v-slot:body>
+      <p class="text-gray-500 uppercase font-bold text-sm text-center">
+        {{ privateState.error }}
+      </p>
+    </template>
+  </AlertModal>
 </template>
 
 <script>
@@ -123,17 +140,17 @@ import store from "../store";
 import Task from "../components/Task.vue";
 import axios from "axios";
 import { server } from "../helper";
+import AlertModal from "./../components/AlertModal.vue";
 
 export default {
   name: "Home",
-  components: { Task },
+  components: { Task, AlertModal },
   data() {
     return {
-      privateState: { search: "", task: "" },
+      privateState: { search: "", task: "", error: "" },
       sharedState: store.state,
     };
   },
-
   mounted() {
     !this.sharedState.loadingUser &&
       !this.sharedState.isAuthenticated &&
@@ -154,7 +171,7 @@ export default {
     clearSearchResults(e) {
       this.privateState.search === "" && store.clearSearchResults();
     },
-    async addTask(e) {
+    async addTask(e, cb) {
       e.preventDefault();
 
       try {
@@ -173,7 +190,10 @@ export default {
             store.addTask({ ...res.data });
             this.privateState.task = "";
           })
-          .catch((err) => console.error(err.response.data.message));
+          .catch((err) => {
+            this.privateState.error = err.response.data.message[0];
+            cb();
+          });
       } catch (err) {
         console.error(err);
       }

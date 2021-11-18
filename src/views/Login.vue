@@ -73,7 +73,7 @@
   <AlertModal ref="alertModal">
     <template v-slot:header>
       <h1 class="text-pink-600 uppercase font-extrabold text-sm m-auto">
-        error
+        {{ sharedState.language.error }}
       </h1>
     </template>
 

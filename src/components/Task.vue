@@ -13,7 +13,7 @@
           : 'flex items-center flex-col gap-3 justify-between',
       ]"
     >
-      <button @click="() => removeTask(task.id)">
+      <button @click="$refs.deleteModal.openModal">
         <font-awesome-icon icon="trash-alt" size="lg" class="text-pink-400" />
       </button>
       <button
@@ -89,7 +89,7 @@
                 e,
                 task.id,
                 $refs.editModal.closeModal,
-                privateState.editTask
+                $refs.alertEModal.openModal
               )
           "
         >
@@ -133,16 +133,53 @@
   <AlertModal ref="alertModal">
     <template v-slot:header>
       <h1 class="text-green-600 uppercase font-extrabold text-sm m-auto">
-        congragulations
+        {{ sharedState.language.congragulation }}
       </h1>
     </template>
 
     <template v-slot:body>
       <p class="text-gray-500 uppercase font-bold text-sm text-center">
-        way to crush a task. be proud of yourself
+        {{ sharedState.language.congrats }}
       </p>
     </template>
   </AlertModal>
+  <AlertModal ref="alertEModal">
+    <template v-slot:header>
+      <h1 class="text-pink-600 uppercase font-extrabold text-sm m-auto">
+        {{ sharedState.language.error }}
+      </h1>
+    </template>
+
+    <template v-slot:body>
+      <p class="text-gray-500 uppercase font-bold text-sm text-center">
+        {{ privateState.error }}
+      </p>
+    </template>
+  </AlertModal>
+  <DeleteModal ref="deleteModal">
+    <template v-slot:header>
+      <h1 class="text-pink-600 uppercase font-extrabold text-sm m-auto">
+        {{ sharedState.language.alert }}
+      </h1>
+    </template>
+
+    <template v-slot:body>
+      <p class="text-gray-500 uppercase font-bold text-sm text-center">
+        {{ sharedState.language.deletePrompt }}
+      </p>
+    </template>
+    <template v-slot:actions>
+      <button @click="$refs.deleteModal.closeModal" class="text-green-400">
+        {{ sharedState.language.cancel }}
+      </button>
+      <button
+        @click="() => removeTask(task.id, $refs.deleteModal.closeModal)"
+        class="text-pink-500"
+      >
+        {{ sharedState.language.delete }}
+      </button>
+    </template>
+  </DeleteModal>
 </template>
 
 <script>
@@ -154,17 +191,18 @@ import { server } from "../helper";
 import Modal from "./Modal.vue";
 import EditModal from "./EditModal.vue";
 import AlertModal from "./AlertModal.vue";
+import DeleteModal from "./DeleteModal.vue";
 
 export default {
   name: "Task",
   props: ["task"],
   data() {
     return {
-      privateState: { task: "", editTask: "" },
+      privateState: { task: "", editTask: "", error: "" },
       sharedState: store.state,
     };
   },
-  components: { Modal, EditModal, AlertModal },
+  components: { Modal, EditModal, AlertModal, DeleteModal },
   created() {
     dayjs.extend(relativeTime);
   },
@@ -177,7 +215,7 @@ export default {
       return dayjs(date).fromNow();
     },
 
-    editTask(e, id, cb) {
+    editTask(e, id, cb, openEModal) {
       e.preventDefault();
 
       axios
@@ -196,16 +234,20 @@ export default {
           this.privateState.editTask = "";
           cb();
         })
-        .catch((err) => console.error(err.response.data.message));
+        .catch((err) => {
+          this.privateState.error = err.response.data.message[0];
+          openEModal();
+        });
     },
 
-    removeTask: (id) => {
+    removeTask: (id, cb) => {
       axios
         .delete(`${server.baseURL}/tasks/${id}`, {
           withCredentials: true,
         })
         .then((res) => {
           store.removeTask(id);
+          cb();
         })
         .catch((err) => console.log(err.response));
     },
