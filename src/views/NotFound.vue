@@ -17,6 +17,19 @@
     >
       Page Not Found
     </h1>
+    <p
+      class="
+        text-center
+        cursor-pointer
+        text-gray-400
+        uppercase
+        font-semibold
+        mt-5
+      "
+      @click="() => $router.push({ name: 'Home' })"
+    >
+      back to home
+    </p>
   </div>
 </template>
 
