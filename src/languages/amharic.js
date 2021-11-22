@@ -6,6 +6,7 @@ export default {
 	reset: 'ዳግም አስጀምር',
 	register: 'መዝግብ',
 	add: 'ጨምር',
+	submit: 'submit',
 	question: 'መለያ የለህም?',
 	question2: 'መለያ አለህ?',
 	rLink: 'ተመዝገብ',

@@ -6,6 +6,7 @@ export default {
 	logout: 'Logout',
 	register: 'Register',
 	add: 'ADD',
+	submit: 'submit',
 	question: "You don't have an account?",
 	question2: 'Already have account?',
 	rLink: 'register',
