@@ -28,7 +28,6 @@ export default {
   data() {
     return {
       show: false,
-      sharedState: store.state,
     };
   },
   methods: {

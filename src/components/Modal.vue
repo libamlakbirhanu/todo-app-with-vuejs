@@ -19,14 +19,14 @@
 
         <div class="modal__footer">
           <h1 class="font-bold text-gray-600 uppercase">
-            {{ sharedState.language.status }}
+            {{ $store.state.language.status }}
           </h1>
           <slot name="status" />
         </div>
 
         <div class="modal__footer">
           <h1 class="font-bold text-gray-600 uppercase">
-            {{ sharedState.language.date }}
+            {{ $store.state.language.date }}
           </h1>
           <slot name="date" />
         </div>
@@ -43,7 +43,6 @@ export default {
   data() {
     return {
       show: false,
-      sharedState: store.state,
     };
   },
   methods: {
