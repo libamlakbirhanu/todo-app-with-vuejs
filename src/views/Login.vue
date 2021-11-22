@@ -1,12 +1,14 @@
 <template>
   <div class="container max-w-md mx-auto my-20 px-6 py-6 shadow">
     <h1 class="text-pink-600 font-bold font-sans text-4xl text-center">
-      {{ sharedState.language.lTitle }}
+      {{ $store.state.language.lTitle }}
     </h1>
     <div class="h-0.5 bg-gray-200 w-36 mx-auto mt-2.5"></div>
-    <form @submit="(e) => handleSubmit(e, $refs.alertModal.openModal)">
+    <form @submit.prevent="handleSubmit">
       <div class="flex flex-col my-5">
-        <label class="my-2" for="uname">{{ sharedState.language.email }}</label>
+        <label class="my-2" for="uname">{{
+          $store.state.language.email
+        }}</label>
         <input
           type="email"
           id="email"
@@ -23,10 +25,14 @@
             text-pink-500
             inputs
           "
-          required
         />
+        <p v-if="v$.privateState.email.$error" class="text-red-500 text-sm">
+          {{
+            v$.privateState.email.$errors[0].$message.replace("Value", "Email")
+          }}
+        </p>
         <label class="my-2" for="psw">{{
-          sharedState.language.password
+          $store.state.language.password
         }}</label>
         <input
           type="password"
@@ -44,90 +50,80 @@
             text-pink-500
             inputs
           "
-          required
         />
+        <p v-if="v$.privateState.password.$error" class="text-red-500 text-sm">
+          {{
+            v$.privateState.password.$errors[0].$message.replace(
+              "Value",
+              "Password"
+            )
+          }}
+        </p>
       </div>
       <div class="text-center mt-3 mb-3">
         <button
           type="reset"
           class="px-7 py-2 mx-2 font-semibold text-gray-800 bg-gray-100 rounded"
         >
-          {{ sharedState.language.reset }}
+          {{ $store.state.language.reset }}
         </button>
         <button
           type="submit"
           class="px-7 py-2 mx-2 font-semibold text-white bg-pink-600 rounded"
         >
-          {{ sharedState.language.login }}
+          {{ $store.state.language.login }}
         </button>
       </div>
       <label class="block text-center" for="psw"
-        >{{ sharedState.language.question }}
+        >{{ $store.state.language.question }}
         <router-link to="/register">{{
-          sharedState.language.rLink
+          $store.state.language.rLink
         }}</router-link></label
       >
     </form>
   </div>
-
-  <AlertModal ref="alertModal">
-    <template v-slot:header>
-      <h1 class="text-pink-600 uppercase font-extrabold text-sm m-auto">
-        {{ sharedState.language.error }}
-      </h1>
-    </template>
-
-    <template v-slot:body>
-      <p class="text-gray-500 uppercase font-bold text-sm text-center">
-        {{ privateState.error }}
-      </p>
-    </template>
-  </AlertModal>
 </template>
 
 <script>
 import axios from "axios";
-import { server } from "../helper";
-import store from "../store";
 import AlertModal from "./../components/AlertModal.vue";
+import { useVuelidate } from "@vuelidate/core";
+import { email, required } from "@vuelidate/validators";
 
 export default {
   name: "Login",
   data() {
     return {
+      v$: useVuelidate(),
       privateState: { email: "", password: "", error: "" },
-      sharedState: store.state,
+    };
+  },
+  validations() {
+    return {
+      privateState: {
+        password: { required },
+        email: { required, email },
+      },
     };
   },
   components: { AlertModal },
   created() {
-    this.sharedState.isAuthenticated && this.$router.push({ name: "Home" });
+    this.$store.commit("showNavbar", this.$router.currentRoute._value.path);
   },
   methods: {
-    async handleSubmit(e, cb) {
-      e.preventDefault();
-      const formData = {
-        email: this.privateState.email.trim(),
-        password: this.privateState.password.trim(),
-      };
-      try {
-        axios
-          .post(`${server.baseURL}/auth/login`, formData, {
-            headers: {
-              "Content-type": "application/json",
-            },
-            withCredentials: true,
-          })
-          .then((res) => {
-            store.setCurrentUser(res.data);
-            this.$router.push({ name: "Home" });
-          })
-          .catch((err) => {
-            this.privateState.error = err.response.data.message;
-            cb();
-          });
-      } catch (err) {
-        console.error(err);
+    async handleSubmit(e) {
+      this.v$.$validate();
+      if (!this.v$.$error) {
+        const formData = {
+          email: this.privateState.email.trim(),
+          password: this.privateState.password.trim(),
+        };
+        this.$store.dispatch("login", {
+          formData,
+          routeToHome: () => this.$router.push({ name: "Home" }),
+        });
+      } else {
+        console.log("wtf");
       }
     },
   },
