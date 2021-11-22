@@ -2,8 +2,8 @@
   <div
     :class="[
       !task.completed
-        ? 'bg-pink-100 rounded px-5 py-3 mb-5 shadow-md task-width flex gap-3'
-        : 'bg-pink-100 rounded px-5 py-3 mb-5 shadow-md task-width flex gap-3 border-r-8 border-green-500',
+        ? 'bg-pink-100 rounded px-5 py-3 mb-5 shadow-md  flex gap-3'
+        : 'bg-pink-100 rounded px-5 py-3 mb-5 shadow-md  flex gap-3 border-r-8 border-green-500',
     ]"
   >
     <div
@@ -16,14 +16,18 @@
       <button @click="$refs.deleteModal.openModal">
         <font-awesome-icon icon="trash-alt" size="lg" class="text-pink-400" />
       </button>
-      <button
-        v-show="!task.completed"
-        @click="() => markTaskComplete(task.id, $refs.alertModal.openModal)"
-      >
+      <button v-if="task.completed">
         <font-awesome-icon
           icon="check-circle"
           size="lg"
           class="text-green-400"
+        />
+      </button>
+      <button v-else @click="() => markTaskComplete(task.id)">
+        <font-awesome-icon
+          icon="check-circle"
+          size="lg"
+          class="text-gray-400"
         />
       </button>
     </div>
@@ -31,7 +35,15 @@
       class="flex-grow flex flex-col justify-around cursor-pointer"
       @click="$refs.detailModal.openModal()"
     >
-      <p class="text-gray-500 uppercase font-bold text-sm">{{ task.body }}</p>
+      <p
+        :class="[
+          !task.completed
+            ? 'text-gray-500 uppercase font-bold text-sm'
+            : 'text-gray-500 uppercase font-bold text-sm line-through',
+        ]"
+      >
+        {{ task.body }}
+      </p>
       <p class="text-gray-400 text-xs mt-2">
         {{ displayFromNow(task.createdAt) }}
       </p>
@@ -45,7 +57,7 @@
     <Modal ref="detailModal">
       <template v-slot:header>
         <h1 class="text-gray-600 uppercase font-extrabold text-sm">
-          {{ sharedState.language.task }}
+          {{ $store.state.language.task }}
         </h1>
       </template>
 
@@ -76,22 +88,14 @@
     <EditModal ref="editModal">
       <template v-slot:header>
         <h1 class="text-gray-600 uppercase font-extrabold text-sm">
-          {{ sharedState.language.editTask }}
+          {{ $store.state.language.editTask }}
         </h1>
       </template>
 
       <template v-slot:body>
         <form
           class="mb-5"
-          @submit="
-            (e) =>
-              editTask(
-                e,
-                task.id,
-                $refs.editModal.closeModal,
-                $refs.alertEModal.openModal
-              )
-          "
+          @submit.prevent="editTask(task.id, $refs.editModal.closeModal)"
         >
           <input
             class="
@@ -104,8 +108,8 @@
               p-1
             "
             type="text"
-            :placeholder="task.body"
-            v-model="privateState.editTask"
+            :value="task.body"
+            @keyup="handleEditInput"
             required
           />
           <button
@@ -123,60 +127,34 @@
               block
             "
           >
-            {{ sharedState.language.cancel }}
+            {{ $store.state.language.submit }}
           </button>
         </form>
       </template>
     </EditModal>
   </div>
 
-  <AlertModal ref="alertModal">
-    <template v-slot:header>
-      <h1 class="text-green-600 uppercase font-extrabold text-sm m-auto">
-        {{ sharedState.language.congragulation }}
-      </h1>
-    </template>
-
-    <template v-slot:body>
-      <p class="text-gray-500 uppercase font-bold text-sm text-center">
-        {{ sharedState.language.congrats }}
-      </p>
-    </template>
-  </AlertModal>
-  <AlertModal ref="alertEModal">
-    <template v-slot:header>
-      <h1 class="text-pink-600 uppercase font-extrabold text-sm m-auto">
-        {{ sharedState.language.error }}
-      </h1>
-    </template>
-
-    <template v-slot:body>
-      <p class="text-gray-500 uppercase font-bold text-sm text-center">
-        {{ privateState.error }}
-      </p>
-    </template>
-  </AlertModal>
   <DeleteModal ref="deleteModal">
     <template v-slot:header>
       <h1 class="text-pink-600 uppercase font-extrabold text-sm m-auto">
-        {{ sharedState.language.alert }}
+        {{ $store.state.language.alert }}
       </h1>
     </template>
 
     <template v-slot:body>
       <p class="text-gray-500 uppercase font-bold text-sm text-center">
-        {{ sharedState.language.deletePrompt }}
+        {{ $store.state.language.deletePrompt }}
       </p>
     </template>
     <template v-slot:actions>
       <button @click="$refs.deleteModal.closeModal" class="text-green-400">
-        {{ sharedState.language.cancel }}
+        {{ $store.state.language.cancel }}
       </button>
       <button
         @click="() => removeTask(task.id, $refs.deleteModal.closeModal)"
         class="text-pink-500"
       >
-        {{ sharedState.language.delete }}
+        {{ $store.state.language.delete }}
       </button>
     </template>
   </DeleteModal>
@@ -185,9 +163,7 @@
 <script>
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import store from "../store";
 import axios from "axios";
-import { server } from "../helper";
 import Modal from "./Modal.vue";
 import EditModal from "./EditModal.vue";
 import AlertModal from "./AlertModal.vue";
@@ -199,7 +175,6 @@ export default {
   data() {
     return {
       privateState: { task: "", editTask: "", error: "" },
-      sharedState: store.state,
     };
   },
   components: { Modal, EditModal, AlertModal, DeleteModal },
@@ -215,60 +190,24 @@ export default {
       return dayjs(date).fromNow();
     },
 
-    editTask(e, id, cb, openEModal) {
-      e.preventDefault();
-
-      axios
-        .patch(
-          `${server.baseURL}/tasks/${id}`,
-          { body: this.privateState.editTask.trim() },
-          {
-            headers: {
-              "Content-type": "application/json",
-            },
-            withCredentials: true,
-          }
-        )
-        .then((res) => {
-          store.editTask(id, { ...res.data.task });
-          this.privateState.editTask = "";
-          cb();
-        })
-        .catch((err) => {
-          this.privateState.error = err.response.data.message[0];
-          openEModal();
-        });
+    handleEditInput(e) {
+      this.privateState.editTask = e.target.value;
     },
 
-    removeTask: (id, cb) => {
-      axios
-        .delete(`${server.baseURL}/tasks/${id}`, {
-          withCredentials: true,
-        })
-        .then((res) => {
-          store.removeTask(id);
-          cb();
-        })
-        .catch((err) => console.log(err.response));
+    editTask(id, cb) {
+      this.$store.dispatch("editTask", {
+        id,
+        task: this.privateState.editTask,
+        cb,
+      });
     },
 
-    markTaskComplete: (id, cb) => {
-      axios
-        .patch(
-          `${server.baseURL}/tasks/complete/${id}`,
-          {},
-          {
-            headers: {
-              "Content-type": "application/json",
-            },
-            withCredentials: true,
-          }
-        )
-        .then((res) => {
-          store.markTaskComplete(id);
-          cb();
-        })
-        .catch((err) => console.log(err.response.data.message));
+    removeTask(id, cb) {
+      this.$store.dispatch("removeTask", { id, cb });
+    },
+
+    markTaskComplete(id) {
+      this.$store.dispatch("markTaskComplete", id);
     },
   },
 };
