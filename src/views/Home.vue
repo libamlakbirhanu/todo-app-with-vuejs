@@ -1,66 +1,47 @@
 <template>
-  <div class="mt-20 mx-auto w-11/12 sm:w-4/5 flex flex-col">
-    <div class="flex justify-center sm:justify-between mb-5 flex-wrap">
-      <form @submit="displaySearchResults">
-        <input
-          class="
-            bg-transparent
-            border-b-2
-            outline-none
-            focus:border-pink-500
-            text-pink-500
-            p-1
-            mr-2
-            mb-5
-          "
-          type="text"
-          :placeholder="sharedState.language.search"
-          v-model="privateState.search"
-          @keyup="clearSearchResults"
-        />
-      </form>
-      <div class="flex gap-3 mb-5">
-        <select
-          name="filterOptions"
-          id="filters"
-          @change="displayFilterResults"
-          class="px-1 py-0 text-gray-500"
-        >
-          <option value="all">all</option>
-          <option value="complete">complete</option>
-          <option value="incomplete">incomplete</option>
-        </select>
-        <select
-          name="languages"
-          id="languages"
-          @change="changeLanguage"
-          class="p-2 text-gray-500"
-        >
-          <option value="none" selected disabled hidden>
-            {{ sharedState.language.language }}
-          </option>
-          <option value="amh">amharic</option>
-          <option value="en">english</option>
-        </select>
-      </div>
-    </div>
+  <div class="flex justify-end gap-3 mb-5 mt-20 mr-5 sm:mr-20">
+    <select
+      name="filterOptions"
+      id="filters"
+      @change="displayFilterResults"
+      class="px-1 py-0 text-gray-500"
+      v-show="$store.state.isAuthenticated"
+    >
+      <option value="all">all</option>
+      <option value="complete">complete</option>
+      <option value="incomplete">incomplete</option>
+    </select>
+    <select
+      name="languages"
+      id="languages"
+      @change="changeLanguage"
+      class="p-2 text-gray-500"
+    >
+      <option value="none" selected disabled hidden>
+        {{ $store.state.language.language }}
+      </option>
+      <option value="amh">amharic</option>
+      <option value="en">english</option>
+    </select>
+  </div>
+  <div class="mx-auto w-11/12 sm:w-4/5 md:w-3/5 lg:w-2/5 flex flex-col">
     <form
-      @submit="(e) => addTask(e, $refs.alertModal.openModal)"
-      class="mb-5 flex flex-nowrap justify-around"
+      @submit.prevent="(e) => addTask(e, $refs.alertModal.openModal)"
+      class="mb-5 flex flex-nowrap justify-between w-full"
     >
       <input
         class="
           bg-transparent
           border-b-2
           outline-none
-          w-4/5
           focus:border-pink-500
           text-pink-500
           p-1
-          mr-2
+          mr-3
+          w-3/4
         "
         type="text"
-        :placeholder="sharedState.language.placeholder"
+        :placeholder="$store.state.language.placeholder"
         v-model="privateState.task"
         required
       />
@@ -76,24 +57,11 @@
           shadow-md
         "
       >
-        {{ sharedState.language.add }}
+        {{ $store.state.language.add }}
       </button>
     </form>
-    <div
-      v-if="
-        sharedState.isAuthenticated &&
-        sharedState.currentUser.tasks &&
-        sharedState.currentUser.tasks.length > 0
-      "
-    >
-      <div
-        v-for="task in sharedState.searchResults
-          ? sharedState.searchResults
-          : sharedState.filterResults
-          ? sharedState.filterResults
-          : sharedState.currentUser.tasks"
-        :key="task.id"
-      >
+    <div v-if="authenticatedAndHasTasks" class="m-auto">
+      <div v-for="task in activeList" :key="task.id">
         <Task :task="task" />
       </div>
     </div>
@@ -107,7 +75,6 @@
         py-10
         mt-10
         shadow-md
-        task-width
         flex
         items-center
         justify-center
@@ -115,7 +82,7 @@
       "
     >
       <p class="text-gray-500 uppercase font-bold text-sm text-center">
-        {{ sharedState.language.emptyTasks }}
+        {{ $store.state.language.emptyTasks }}
       </p>
     </div>
   </div>
@@ -123,7 +90,7 @@
   <AlertModal ref="alertModal">
     <template v-slot:header>
       <h1 class="text-pink-600 uppercase font-extrabold text-sm m-auto">
-        {{ sharedState.language.error }}
+        {{ $store.state.language.error }}
       </h1>
     </template>
 
@@ -136,10 +103,8 @@
 </template>
 
 <script>
-import store from "../store";
 import Task from "../components/Task.vue";
 import axios from "axios";
-import { server } from "../helper";
 import AlertModal from "./../components/AlertModal.vue";
 
 export default {
@@ -147,56 +112,44 @@ export default {
   components: { Task, AlertModal },
   data() {
     return {
-      privateState: { search: "", task: "", error: "" },
-      sharedState: store.state,
+      privateState: { task: "", error: "" },
     };
   },
+  beforeCreate() {
+    // !this.$store.state.isAuthenticated && this.$router.push({ name: "Login" });
+  },
+  created() {
+    this.$store.commit("showNavbar", this.$router.currentRoute._value.path);
+  },
   mounted() {
-    !this.sharedState.loadingUser &&
-      !this.sharedState.isAuthenticated &&
-      this.$router.push({ name: "Login" });
-    store.resetTasks();
+    this.$store.commit("resetTasks");
+  },
+  computed: {
+    authenticatedAndHasTasks() {
+      return (
+        this.$store.state.isAuthenticated &&
+        this.$store.state.currentUser.tasks &&
+        this.$store.state.currentUser.tasks.length > 0
+      );
+    },
+    activeList() {
+      return this.$store.state.searchResults
+        ? this.$store.state.searchResults
+        : this.$store.state.filterResults
+        ? this.$store.state.filterResults
+        : this.$store.state.currentUser.tasks;
+    },
   },
   methods: {
-    displaySearchResults(e) {
-      e.preventDefault();
-      store.showSearchResults(this.privateState.search);
-    },
     displayFilterResults(e) {
-      store.showFilterResults(e.target.value);
+      this.$store.commit("showFilterResults", e.target.value);
     },
     changeLanguage(e) {
-      store.selectLanguage(e.target.value);
-    },
-    clearSearchResults(e) {
-      this.privateState.search === "" && store.clearSearchResults();
+      this.$store.commit("selectLanguage", e.target.value);
     },
     async addTask(e, cb) {
-      e.preventDefault();
-
-      try {
-        axios
-          .post(
-            `${server.baseURL}/tasks`,
-            { body: this.privateState.task.trim() },
-            {
-              headers: {
-                "Content-type": "application/json",
-              },
-              withCredentials: true,
-            }
-          )
-          .then((res) => {
-            store.addTask({ ...res.data });
-            this.privateState.task = "";
-          })
-          .catch((err) => {
-            this.privateState.error = err.response.data.message[0];
-            cb();
-          });
-      } catch (err) {
-        console.error(err);
-      }
+      this.$store.dispatch("addTask", { cb, task: this.privateState.task });
+      this.privateState.task = "";
     },
   },
 };
