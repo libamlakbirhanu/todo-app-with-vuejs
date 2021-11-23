@@ -6,6 +6,11 @@
     <div class="h-0.5 bg-gray-200 w-36 mx-auto mt-2.5"></div>
     <form @submit.prevent="handleSubmit">
       <div class="flex flex-col my-5">
+        <div v-if="privateState.error !== ''">
+          <p class="border-2 text-center text-red-500 rounded p-2">
+            {{ privateState.error }}
+          </p>
+        </div>
         <label class="my-2" for="uname">{{
           $store.state.language.email
         }}</label>
@@ -192,6 +197,11 @@ export default {
           formData,
           routeToLogin: () => this.$router.push({ name: "Login" }),
         });
+
+        this.privateState.error = "fields have to be unique";
+        setTimeout(() => {
+          this.privateState.error = "";
+        }, 1500);
       }
     },
   },

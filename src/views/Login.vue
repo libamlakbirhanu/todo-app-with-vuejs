@@ -4,13 +4,19 @@
       {{ $store.state.language.lTitle }}
     </h1>
     <div class="h-0.5 bg-gray-200 w-36 mx-auto mt-2.5"></div>
+
     <form @submit.prevent="handleSubmit">
       <div class="flex flex-col my-5">
+        <div v-if="privateState.error !== ''">
+          <p class="border-2 text-center text-red-500 rounded p-2">
+            {{ privateState.error }}
+          </p>
+        </div>
         <label class="my-2" for="uname">{{
           $store.state.language.email
         }}</label>
         <input
-          type="email"
+          type="text"
           id="email"
           name="email"
           v-model="privateState.email"
@@ -111,7 +117,7 @@ export default {
     this.$store.commit("showNavbar", this.$router.currentRoute._value.path);
   },
   methods: {
-    async handleSubmit(e) {
+    handleSubmit(e) {
       this.v$.$validate();
       if (!this.v$.$error) {
         const formData = {
@@ -122,8 +128,11 @@ export default {
           formData,
           routeToHome: () => this.$router.push({ name: "Home" }),
         });
-      } else {
-        console.log("wtf");
+
+        this.privateState.error = "Incorrect credentials";
+        setTimeout(() => {
+          this.privateState.error = "";
+        }, 1500);
       }
     },
   },
