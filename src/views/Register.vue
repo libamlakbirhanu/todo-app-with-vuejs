@@ -1,14 +1,16 @@
 <template>
   <div class="container max-w-md mx-auto my-10 px-6 py-6 shadow">
     <h1 class="text-pink-600 font-bold font-sans text-4xl text-center">
-      {{ sharedState.language.rTitle }}
+      {{ $store.state.language.rTitle }}
     </h1>
     <div class="h-0.5 bg-gray-200 w-36 mx-auto mt-2.5"></div>
-    <form @submit="(e) => handleSubmit(e, $refs.alertModal.openModal)">
+    <form @submit.prevent="handleSubmit">
       <div class="flex flex-col my-5">
-        <label class="my-2" for="uname">{{ sharedState.language.email }}</label>
+        <label class="my-2" for="uname">{{
+          $store.state.language.email
+        }}</label>
         <input
-          type="email"
+          type="text"
           id="email"
           name="email"
           v-model="privateState.email"
@@ -23,10 +25,14 @@
             text-pink-500
             inputs
           "
-          required
         />
+        <p v-if="v$.privateState.email.$error" class="text-red-500 text-sm">
+          {{
+            v$.privateState.email.$errors[0].$message.replace("Value", "Email")
+          }}
+        </p>
         <label class="my-2" for="uname">{{
-          sharedState.language.username
+          $store.state.language.username
         }}</label>
         <input
           type="text"
@@ -44,10 +50,17 @@
             text-pink-500
             inputs
           "
-          required
         />
+        <p v-if="v$.privateState.username.$error" class="text-red-500 text-sm">
+          {{
+            v$.privateState.username.$errors[0].$message.replace(
+              "Value",
+              "Username"
+            )
+          }}
+        </p>
         <label class="my-2" for="psw">{{
-          sharedState.language.password
+          $store.state.language.password
         }}</label>
         <input
           type="password"
@@ -65,10 +78,17 @@
             text-pink-500
             inputs
           "
-          required
         />
+        <p v-if="v$.privateState.password.$error" class="text-red-500 text-sm">
+          {{
+            v$.privateState.password.$errors[0].$message.replace(
+              "Value",
+              "Password"
+            )
+          }}
+        </p>
         <label class="my-2" for="psw">{{
-          sharedState.language.confirmPassword
+          $store.state.language.confirmPassword
         }}</label>
         <input
           type="password"
@@ -86,58 +106,53 @@
             text-pink-500
             inputs
           "
-          required
         />
+        <p
+          v-if="v$.privateState.confirmPassword.$error"
+          class="text-red-500 text-sm"
+        >
+          {{
+            v$.privateState.confirmPassword.$errors[0].$message.replace(
+              "Value",
+              "Confirm Password"
+            )
+          }}
+        </p>
       </div>
       <div class="text-center my-3">
         <button
           type="reset"
           class="px-7 py-2 mx-2 font-semibold text-gray-800 bg-gray-100 rounded"
         >
-          {{ sharedState.language.reset }}
+          {{ $store.state.language.reset }}
         </button>
         <button
           type="submit"
           class="px-7 py-2 mx-2 font-semibold text-white bg-pink-600 rounded"
         >
-          {{ sharedState.language.register }}
+          {{ $store.state.language.register }}
         </button>
       </div>
       <label class="text-center block" for="psw"
-        >{{ sharedState.language.question2 }}
+        >{{ $store.state.language.question2 }}
         <router-link to="/">{{
-          sharedState.language.login
+          $store.state.language.login
         }}</router-link></label
       >
     </form>
   </div>
-
-  <AlertModal ref="alertModal">
-    <template v-slot:header>
-      <h1 class="text-pink-600 uppercase font-extrabold text-sm m-auto">
-        {{ sharedState.language.error }}
-      </h1>
-    </template>
-
-    <template v-slot:body>
-      <p class="text-gray-500 uppercase font-bold text-sm text-center">
-        {{ privateState.error }}
-      </p>
-    </template>
-  </AlertModal>
 </template>
 
 <script>
 import axios from "axios";
-import { server } from "../helper";
-import store from "../store";
-import AlertModal from "./../components/AlertModal.vue";
+import { useVuelidate } from "@vuelidate/core";
+import { email, required, sameAs, minLength } from "@vuelidate/validators";
 
 export default {
   name: "Register",
   data() {
     return {
-      sharedState: store.state,
+      v$: useVuelidate(),
       privateState: {
         username: "",
         email: "",
@@ -147,35 +162,36 @@ export default {
       },
     };
   },
-  components: { AlertModal },
+  created() {
+    this.$store.commit("showNavbar", this.$router.currentRoute._value.path);
+  },
+  validations() {
+    return {
+      privateState: {
+        password: { required, minLength: minLength(8) },
+        email: { required, email },
+        username: { required },
+        confirmPassword: {
+          required,
+          sameAs: sameAs(this.privateState.password),
+        },
+      },
+    };
+  },
   methods: {
-    handleSubmit(e, cb) {
-      e.preventDefault();
+    handleSubmit() {
       const formData = {
         username: this.privateState.username.trim(),
         password: this.privateState.password.trim(),
         confirmPassword: this.privateState.confirmPassword.trim(),
         email: this.privateState.email.trim(),
       };
-
-      try {
-        axios
-          .post(`${server.baseURL}/auth/register`, formData, {
-            headers: {
-              "Content-type": "application/json",
-            },
-            withCredentials: true,
-          })
-          .then((res) => {
-            store.setCurrentUser(res.data.user);
-            this.$router.push({ name: "Home" });
-          })
-          .catch((err) => {
-            this.privateState.error = err.response.data.message;
-            cb();
-          });
-      } catch (err) {
-        console.error(err);
+      this.v$.$validate();
+      if (!this.v$.$error) {
+        this.$store.dispatch("register", {
+          formData,
+          routeToLogin: () => this.$router.push({ name: "Login" }),
+        });
       }
     },
   },
