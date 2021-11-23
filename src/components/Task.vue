@@ -108,10 +108,14 @@
               p-1
             "
             type="text"
-            :value="task.body"
-            @keyup="handleEditInput"
-            required
+            v-model="privateState.editTask"
           />
+          <p
+            v-if="v$.privateState.editTask.$error"
+            class="text-red-500 text-sm"
+          >
+            {{ v$.privateState.editTask.$errors[0].$message }}
+          </p>
           <button
             type="submit"
             class="
@@ -168,17 +172,28 @@ import Modal from "./Modal.vue";
 import EditModal from "./EditModal.vue";
 import AlertModal from "./AlertModal.vue";
 import DeleteModal from "./DeleteModal.vue";
+import { useVuelidate } from "@vuelidate/core";
+import { required } from "@vuelidate/validators";
 
 export default {
   name: "Task",
   props: ["task"],
-  data() {
+  data: function () {
     return {
-      privateState: { task: "", editTask: "", error: "" },
+      v$: useVuelidate(),
+      privateState: { task: "", editTask: this.task.body, error: "" },
+    };
+  },
+  validations() {
+    return {
+      privateState: {
+        editTask: { required },
+      },
     };
   },
   components: { Modal, EditModal, AlertModal, DeleteModal },
   created() {
+    console.log(this.task.body);
     dayjs.extend(relativeTime);
   },
   methods: {
@@ -190,16 +205,15 @@ export default {
       return dayjs(date).fromNow();
     },
 
-    handleEditInput(e) {
-      this.privateState.editTask = e.target.value;
-    },
-
     editTask(id, cb) {
-      this.$store.dispatch("editTask", {
-        id,
-        task: this.privateState.editTask,
-        cb,
-      });
+      this.v$.$validate();
+      if (!this.v$.$error) {
+        this.$store.dispatch("editTask", {
+          id,
+          task: this.privateState.editTask,
+          cb,
+        });
+      }
     },
 
     removeTask(id, cb) {
