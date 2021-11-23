@@ -60,7 +60,7 @@
         {{ $store.state.language.add }}
       </button>
     </form>
-    <div v-if="authenticatedAndHasTasks" class="m-auto">
+    <div v-if="authenticatedAndHasTasks" class="flex justify-center flex-col">
       <div v-for="task in activeList" :key="task.id">
         <Task :task="task" />
       </div>

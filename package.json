@@ -16,6 +16,8 @@
     "@vuelidate/validators": "^2.0.0-alpha.25",
     "axios": "^0.24.0",
     "dayjs": "^1.10.7",
+    "i18n": "^0.13.3",
+    "storejs": "^2.0.1",
     "vue": "^3.2.16",
     "vue-router": "^4.0.12",
     "vuex": "^4.0.2"
