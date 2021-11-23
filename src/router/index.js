@@ -3,7 +3,7 @@ import Register from '../views/Register.vue';
 import Login from '../views/Login.vue';
 import Home from '../views/Home.vue';
 import NotFound from '../views/NotFound.vue';
-// import store from './../store';
+import store from 'storejs';
 
 const routes = [
 	{
@@ -33,16 +33,18 @@ const router = createRouter({
 	routes,
 });
 
-// router.beforeEach((to, from, next) => {
-// 	if (to.meta.requiresAuth) {
-// 		if (!store.state.isAuthenticated) {
-// 			next({
-// 				name: 'Login',
-// 			});
-// 		}
-// 	} else {
-// 		next();
-// 	}
-// });
+router.beforeEach((to, from, next) => {
+	if (to.meta.requiresAuth) {
+		if (store.get('accessToken') === '') {
+			next({
+				name: 'Login',
+			});
+		} else {
+			next();
+		}
+	} else {
+		next();
+	}
+});
 
 export default router;

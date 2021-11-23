@@ -66,6 +66,7 @@
 
 <script>
 import axios from "axios";
+import store from "storejs";
 
 export default {
   name: "Navbar",
@@ -84,14 +85,9 @@ export default {
         this.$store.commit("clearSearchResults");
     },
     logout() {
-      axios
-        .post(`/auth/logout`, null, {
-          withCredentials: true,
-        })
-        .then((res) => {
-          this.$store.commit("removeCurrentUser");
-        })
-        .catch((err) => console.error(err));
+      store.set("accessToken", "");
+      this.$store.commit("removeCurrentUser");
+      this.$router.push({ name: "Login" });
     },
   },
 };

@@ -1,5 +1,6 @@
 import { createApp } from 'vue';
-import store from './store';
+import vueXStore from './vueXStore';
+import store from 'storejs';
 import App from './App.vue';
 import './index.css';
 import router from './router';
@@ -23,15 +24,15 @@ library.add(faSadTear);
 axios.defaults.baseURL = 'http://localhost:5000';
 axios.defaults.headers.post['Content-Type'] = 'application/json';
 axios.defaults.headers.patch['Content-Type'] = 'application/json';
-axios.defaults.headers.Authorization = `Bearer ${store.state.accessToken}`;
+axios.defaults.headers.Authorization = `Bearer ${store.get('accessToken')}`;
 
 const func = async function () {
-	const val = await store.dispatch('authCheck');
+	const val = await vueXStore.dispatch('authCheck');
 
 	createApp(App)
 		.component('font-awesome-icon', FontAwesomeIcon)
 		.use(router)
-		.use(store)
+		.use(vueXStore)
 		.mount('#app');
 };
 

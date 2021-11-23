@@ -21,7 +21,7 @@
 </template>
 
 <script>
-import store from "./../store";
+import store from "./../VueXStore";
 
 export default {
   name: "Modal",

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import store from 'storejs';
 
 export default {
 	async authCheck() {
@@ -97,6 +98,7 @@ export default {
 					withCredentials: true,
 				})
 				.then((res) => {
+					store.set('accessToken', res.data.accessToken);
 					this.commit('toggleLoadingUser');
 					this.commit('setCurrentUser', res.data);
 					routeToHome();
