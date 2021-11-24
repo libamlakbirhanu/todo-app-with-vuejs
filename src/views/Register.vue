@@ -1,19 +1,19 @@
 <template>
+  <div
+    v-if="privateState.error"
+    class="absolute top-5 left-5 text-red-500 flex gap-2 items-center"
+  >
+    <font-awesome-icon icon="flag" size="lg" class="text-red-500" />
+    <p class="bg-gray-300 p-2">{{ privateState.error }}</p>
+  </div>
   <div class="container max-w-md mx-auto my-10 px-6 py-6 shadow">
     <h1 class="text-pink-600 font-bold font-sans text-4xl text-center">
-      {{ $store.state.language.rTitle }}
+      {{ $t("message.rTitle") }}
     </h1>
     <div class="h-0.5 bg-gray-200 w-36 mx-auto mt-2.5"></div>
     <form @submit.prevent="handleSubmit">
       <div class="flex flex-col my-5">
-        <div v-if="privateState.error !== ''">
-          <p class="border-2 text-center text-red-500 rounded p-2">
-            {{ privateState.error }}
-          </p>
-        </div>
-        <label class="my-2" for="uname">{{
-          $store.state.language.email
-        }}</label>
+        <label class="my-2" for="uname">{{ $t("message.email") }}</label>
         <input
           type="text"
           id="email"
@@ -36,9 +36,7 @@
             v$.privateState.email.$errors[0].$message.replace("Value", "Email")
           }}
         </p>
-        <label class="my-2" for="uname">{{
-          $store.state.language.username
-        }}</label>
+        <label class="my-2" for="uname">{{ $t("message.username") }}</label>
         <input
           type="text"
           id="uname"
@@ -64,9 +62,7 @@
             )
           }}
         </p>
-        <label class="my-2" for="psw">{{
-          $store.state.language.password
-        }}</label>
+        <label class="my-2" for="psw">{{ $t("message.password") }}</label>
         <input
           type="password"
           id="psw"
@@ -93,7 +89,7 @@
           }}
         </p>
         <label class="my-2" for="psw">{{
-          $store.state.language.confirmPassword
+          $t("message.confirmPassword")
         }}</label>
         <input
           type="password"
@@ -129,20 +125,18 @@
           type="reset"
           class="px-7 py-2 mx-2 font-semibold text-gray-800 bg-gray-100 rounded"
         >
-          {{ $store.state.language.reset }}
+          {{ $t("message.reset") }}
         </button>
         <button
           type="submit"
           class="px-7 py-2 mx-2 font-semibold text-white bg-pink-600 rounded"
         >
-          {{ $store.state.language.register }}
+          {{ $t("message.register") }}
         </button>
       </div>
       <label class="text-center block" for="psw"
-        >{{ $store.state.language.question2 }}
-        <router-link to="/">{{
-          $store.state.language.login
-        }}</router-link></label
+        >{{ $t("message.question2") }}
+        <router-link to="/">{{ $t("message.login") }}</router-link></label
       >
     </form>
   </div>
@@ -193,15 +187,17 @@ export default {
       };
       this.v$.$validate();
       if (!this.v$.$error) {
-        this.$store.dispatch("register", {
-          formData,
-          routeToLogin: () => this.$router.push({ name: "Login" }),
-        });
-
-        this.privateState.error = "fields have to be unique";
-        setTimeout(() => {
-          this.privateState.error = "";
-        }, 1500);
+        this.$store
+          .dispatch("register", {
+            formData,
+            routeToLogin: () => this.$router.push({ name: "Login" }),
+          })
+          .catch((err) => {
+            this.privateState.error = err.response.data.message;
+            setTimeout(() => {
+              this.privateState.error = "";
+            }, 2000);
+          });
       }
     },
   },

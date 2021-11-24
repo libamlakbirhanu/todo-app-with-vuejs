@@ -1,4 +1,18 @@
 <template>
+  <div
+    v-if="privateState.error"
+    class="absolute top-15 left-5 text-red-500 flex gap-2 items-center"
+  >
+    <font-awesome-icon icon="flag" size="lg" class="text-red-500" />
+    <p class="bg-gray-300 p-2">{{ privateState.error }}</p>
+  </div>
+  <div
+    v-if="privateState.success"
+    class="absolute top-15 left-5 text-green-500 flex gap-2 items-center"
+  >
+    <font-awesome-icon icon="flag" size="lg" class="text-green-500" />
+    <p class="bg-gray-300 p-2">{{ privateState.success }}</p>
+  </div>
   <div class="flex justify-end gap-3 mb-5 mt-20 mr-5 sm:mr-20">
     <select
       name="filterOptions"
@@ -18,7 +32,7 @@
       class="p-2 text-gray-500"
     >
       <option value="none" selected disabled hidden>
-        {{ $store.state.language.language }}
+        {{ $t("message.language") }}
       </option>
       <option value="amh">amharic</option>
       <option value="en">english</option>
@@ -26,7 +40,7 @@
   </div>
   <div class="mx-auto w-11/12 sm:w-4/5 md:w-3/5 lg:w-2/5 flex flex-col">
     <form
-      @submit.prevent="(e) => addTask(e, $refs.alertModal.openModal)"
+      @submit.prevent="addTask"
       class="mb-5 flex flex-nowrap justify-between w-full"
     >
       <input
@@ -41,7 +55,7 @@
           w-3/4
         "
         type="text"
-        :placeholder="$store.state.language.placeholder"
+        :placeholder="$t('message.placeholder')"
         v-model="privateState.task"
         required
       />
@@ -57,12 +71,12 @@
           shadow-md
         "
       >
-        {{ $store.state.language.add }}
+        {{ $t("message.add") }}
       </button>
     </form>
     <div v-if="authenticatedAndHasTasks" class="flex justify-center flex-col">
       <div v-for="task in activeList" :key="task.id">
-        <Task :task="task" />
+        <Task :task="task" :setSuccess="setSuccess" />
       </div>
     </div>
     <div
@@ -82,37 +96,23 @@
       "
     >
       <p class="text-gray-500 uppercase font-bold text-sm text-center">
-        {{ $store.state.language.emptyTasks }}
+        {{ $t("message.emptyTasks") }}
       </p>
     </div>
   </div>
-
-  <AlertModal ref="alertModal">
-    <template v-slot:header>
-      <h1 class="text-pink-600 uppercase font-extrabold text-sm m-auto">
-        {{ $store.state.language.error }}
-      </h1>
-    </template>
-
-    <template v-slot:body>
-      <p class="text-gray-500 uppercase font-bold text-sm text-center">
-        {{ privateState.error }}
-      </p>
-    </template>
-  </AlertModal>
 </template>
 
 <script>
 import Task from "../components/Task.vue";
-import axios from "axios";
 import AlertModal from "./../components/AlertModal.vue";
+import store from "storejs";
 
 export default {
   name: "Home",
   components: { Task, AlertModal },
   data() {
     return {
-      privateState: { task: "", error: "" },
+      privateState: { task: "", error: "", success: "" },
     };
   },
   beforeCreate() {
@@ -141,14 +141,46 @@ export default {
     },
   },
   methods: {
+    setSuccess(message) {
+      this.privateState.success = message;
+      setTimeout(() => {
+        this.privateState.success = "";
+      }, 2000);
+    },
     displayFilterResults(e) {
       this.$store.commit("showFilterResults", e.target.value);
     },
     changeLanguage(e) {
-      this.$store.commit("selectLanguage", e.target.value);
+      // this.$store.commit("selectLanguage", e.target.value);
+      this.$i18n.locale = e.target.value;
+      store.set("lang", e.target.value);
     },
-    async addTask(e, cb) {
-      this.$store.dispatch("addTask", { cb, task: this.privateState.task });
+    async addTask(e) {
+      this.$store
+        .dispatch("addTask", {
+          task: this.privateState.task,
+          routeToLogin: () => this.$router.push({ name: "Login" }),
+        })
+        .then(() => {
+          this.privateState.success = "Task created successfully";
+          setTimeout(() => {
+            this.privateState.success = "";
+          }, 2000);
+        })
+        .catch((err) => {
+          if (err.response.status === 401) {
+            this.privateState.error =
+              "You are not logged in. please login first";
+            setTimeout(() => {
+              this.privateState.error = "";
+            }, 2000);
+          } else {
+            this.privateState.error = err.response.data.message[0];
+            setTimeout(() => {
+              this.privateState.error = "";
+            }, 2000);
+          }
+        });
       this.privateState.task = "";
     },
   },

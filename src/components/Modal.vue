@@ -19,14 +19,14 @@
 
         <div class="modal__footer">
           <h1 class="font-bold text-gray-600 uppercase">
-            {{ $store.state.language.status }}
+            {{ $t("message.status") }}
           </h1>
           <slot name="status" />
         </div>
 
         <div class="modal__footer">
           <h1 class="font-bold text-gray-600 uppercase">
-            {{ $store.state.language.date }}
+            {{ $t("message.date") }}
           </h1>
           <slot name="date" />
         </div>

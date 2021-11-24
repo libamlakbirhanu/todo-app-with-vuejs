@@ -27,7 +27,7 @@
           px-1
         "
         type="text"
-        :placeholder="$store.state.language.search"
+        :placeholder="$t('message.search')"
         v-model="privateState.search"
         @keyup="clearSearchResults"
       />
@@ -44,20 +44,20 @@
         class="text-white font-bold cursor-pointer"
         @click="logout"
       >
-        {{ $store.state.language.logout }}
+        {{ $t("message.logout") }}
       </h1>
       <div v-else class="flex gap-3">
         <h1
           class="text-white font-bold cursor-pointer"
           @click="() => $router.push({ name: 'Login' })"
         >
-          {{ $store.state.language.login }}
+          {{ $t("message.login") }}
         </h1>
         <h1
           class="text-white font-bold cursor-pointer"
           @click="() => $router.push({ name: 'Register' })"
         >
-          {{ $store.state.language.register }}
+          {{ $t("message.register") }}
         </h1>
       </div>
     </div>
@@ -65,7 +65,6 @@
 </template>
 
 <script>
-import axios from "axios";
 import store from "storejs";
 
 export default {

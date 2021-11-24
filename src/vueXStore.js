@@ -1,5 +1,3 @@
-import en from './languages/english';
-import amh from './languages/amharic';
 import actions from './actions';
 
 import { createStore } from 'vuex';
@@ -14,7 +12,6 @@ const store = createStore({
 			filterResults: null,
 			showNavbar: false,
 			accessToken: null,
-			language: en,
 		};
 	},
 	actions: { ...actions },
@@ -158,17 +155,6 @@ const store = createStore({
 			this.commit('sortTasks', tempComplete);
 
 			state.currentUser.tasks = [...tempIncomplete, ...tempComplete];
-		},
-
-		selectLanguage(state, lang) {
-			switch (lang) {
-				case 'en':
-					state.language = en;
-					break;
-				case 'amh':
-					state.language = amh;
-					break;
-			}
 		},
 	},
 });

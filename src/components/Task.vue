@@ -57,7 +57,7 @@
     <Modal ref="detailModal">
       <template v-slot:header>
         <h1 class="text-gray-600 uppercase font-extrabold text-sm">
-          {{ $store.state.language.task }}
+          {{ $t("message.task") }}
         </h1>
       </template>
 
@@ -88,7 +88,7 @@
     <EditModal ref="editModal">
       <template v-slot:header>
         <h1 class="text-gray-600 uppercase font-extrabold text-sm">
-          {{ $store.state.language.editTask }}
+          {{ $t("message.editTask") }}
         </h1>
       </template>
 
@@ -131,7 +131,7 @@
               block
             "
           >
-            {{ $store.state.language.submit }}
+            {{ $t("message.submit") }}
           </button>
         </form>
       </template>
@@ -141,24 +141,24 @@
   <DeleteModal ref="deleteModal">
     <template v-slot:header>
       <h1 class="text-pink-600 uppercase font-extrabold text-sm m-auto">
-        {{ $store.state.language.alert }}
+        {{ $t("message.alert") }}
       </h1>
     </template>
 
     <template v-slot:body>
       <p class="text-gray-500 uppercase font-bold text-sm text-center">
-        {{ $store.state.language.deletePrompt }}
+        {{ $t("message.deletePrompt") }}
       </p>
     </template>
     <template v-slot:actions>
       <button @click="$refs.deleteModal.closeModal" class="text-green-400">
-        {{ $store.state.language.cancel }}
+        {{ $t("message.cancel") }}
       </button>
       <button
         @click="() => removeTask(task.id, $refs.deleteModal.closeModal)"
         class="text-pink-500"
       >
-        {{ $store.state.language.delete }}
+        {{ $t("message.delete") }}
       </button>
     </template>
   </DeleteModal>
@@ -167,7 +167,6 @@
 <script>
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import axios from "axios";
 import Modal from "./Modal.vue";
 import EditModal from "./EditModal.vue";
 import AlertModal from "./AlertModal.vue";
@@ -177,11 +176,15 @@ import { required } from "@vuelidate/validators";
 
 export default {
   name: "Task",
-  props: ["task"],
+  props: ["task", "setSuccess"],
   data: function () {
     return {
       v$: useVuelidate(),
-      privateState: { task: "", editTask: this.task.body, error: "" },
+      privateState: {
+        task: "",
+        editTask: this.task.body,
+        error: "",
+      },
     };
   },
   validations() {
@@ -193,7 +196,6 @@ export default {
   },
   components: { Modal, EditModal, AlertModal, DeleteModal },
   created() {
-    console.log(this.task.body);
     dayjs.extend(relativeTime);
   },
   methods: {
@@ -208,20 +210,28 @@ export default {
     editTask(id, cb) {
       this.v$.$validate();
       if (!this.v$.$error) {
-        this.$store.dispatch("editTask", {
-          id,
-          task: this.privateState.editTask,
-          cb,
-        });
+        this.$store
+          .dispatch("editTask", {
+            id,
+            task: this.privateState.editTask,
+            cb,
+          })
+          .then(() => {
+            this.setSuccess("Task edited successfully");
+          });
       }
     },
 
     removeTask(id, cb) {
-      this.$store.dispatch("removeTask", { id, cb });
+      this.$store.dispatch("removeTask", { id, cb }).then(() => {
+        this.setSuccess("Task deleted successfully");
+      });
     },
 
     markTaskComplete(id) {
-      this.$store.dispatch("markTaskComplete", id);
+      this.$store.dispatch("markTaskComplete", id).then(() => {
+        this.setSuccess("Task completed successfully");
+      });
     },
   },
 };
