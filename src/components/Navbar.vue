@@ -17,8 +17,8 @@
     <form @submit.prevent="displaySearchResults" class="flex">
       <input
         class="
-          w-2/3
           bg-transparent
+          w-3/4
           border-b-2
           outline-none
           focus:border-pink-800

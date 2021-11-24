@@ -28,7 +28,9 @@ library.add(faFlag);
 axios.defaults.baseURL = 'http://localhost:5000';
 axios.defaults.headers.post['Content-Type'] = 'application/json';
 axios.defaults.headers.patch['Content-Type'] = 'application/json';
-axios.defaults.headers.Authorization = `Bearer ${store.get('accessToken')}`;
+axios.defaults.headers.Authorization = vueXStore.state.aceseeToken
+	? vueXStore.state.aceseeToken
+	: `Bearer ${store.get('accessToken')}`;
 
 const i18n = createI18n({
 	locale: store.get('lang') ? store.get('lang') : 'amh',

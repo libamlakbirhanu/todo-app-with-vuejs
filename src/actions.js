@@ -96,6 +96,7 @@ export default {
 			})
 			.then((res) => {
 				store.set('accessToken', res.data.accessToken);
+				state.accessToken = res.data.accessToken;
 				this.commit('toggleLoadingUser');
 				this.commit('setCurrentUser', res.data);
 				routeToHome();
